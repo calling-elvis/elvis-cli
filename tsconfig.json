@@ -10,11 +10,10 @@
     "moduleResolution": "node",
     "noImplicitAny": true,
     "resolveJsonModule": true,
-    "sourceMap": true,
-    "target": "es6"
+    "sourceMap": true
   },
   "include": [
-    "src/**/*",
+    "src/**/*"
   ],
   "exclude": [
     "node_modules"

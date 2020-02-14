@@ -1,9 +1,11 @@
 #!/usr/bin/env ts-node
-import conf from "../package.json";
+import path from "path";
 import webpack from "webpack";
 import webpackDevServer from "webpack-dev-server";
 
+const conf = require(path.resolve(__dirname, "../package.json"));
 const cwd = process.cwd();
+const HtmlPlugin = require("html-webpack-plugin");
 
 // webpack configs
 function pack(code: number): void {
@@ -14,17 +16,23 @@ function pack(code: number): void {
 
   const config: any = {
     devServer: {
-      compress: true,
-      contentBase: cwd + "/dist",
       hot: true,
       port: 1439
     },
-    entry: cwd + "/",
+    devtool: "inline-source-map",
+    entry: path.resolve(__dirname, "./bootstrap"),
     mode: mode,
     output: {
       filename: "[name].bundle.js",
       path: cwd + "/dist",
-      publicPath: "/assets/",
+    },
+    plugins: [
+      new HtmlPlugin({
+        title: "Calling Elvis!",
+      }),
+    ],
+    resolve: {
+      extensions: [".ts", ".js", ".wasm"],
     },
   };
 
@@ -49,7 +57,7 @@ function pack(code: number): void {
 // simple cli program
 class Program {
   static run(): void {
-    const argv: string[] = process.argv;
+    const argv = process.argv;
     if (argv.length == 2) {
       Program.help();
       process.exit(0);
@@ -57,23 +65,15 @@ class Program {
 
     switch (argv[2].trim()) {
       case 'build':
-        Program.build();
+        pack(1);
         break;
       case 'dev':
-        Program.dev();
+        pack(0);
         break;
       default:
         Program.help();
         break;
     }
-  }
-
-  static build(): void {
-    pack(1);
-  }
-
-  static dev(): void {
-    pack(0);
   }
 
   static help(): void {

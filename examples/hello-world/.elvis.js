@@ -1,4 +1,7 @@
 /* elvis config file */
 module.exports = {
-  "ssr": false
+  "home": "index",
+  "pages": ".",
+  "ssr": false,
+  "title": "Calling Elvis"
 }

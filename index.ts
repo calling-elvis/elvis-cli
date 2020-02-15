@@ -9,7 +9,6 @@ const conf = require(path.resolve(__dirname, "package.json"));
 const cwd = process.cwd();
 const HtmlPlugin = require("html-webpack-plugin");
 
-/* server side render plugin */
 interface IElvisPluginOptions {
   home?: string;
   pages?: string;
@@ -25,7 +24,7 @@ class ElvisPlugin {
       `  Text("Is anybody home?", {`,
       "    bold: true,",
       "    italic: true,",
-      "    size: 10,",
+      "    size: 6,",
       "  })",
       ");"
     ].join("\n");
@@ -46,7 +45,10 @@ class ElvisPlugin {
 
     // generate home
     const pagesDir = path.resolve(root, opts.pages);
-    const pages = ElvisPlugin.getPages(fs.readdirSync(pagesDir));
+    const pages = ElvisPlugin.getPages(
+      fs.readdirSync(pagesDir)
+    ).map((f) => f.slice(0, f.lastIndexOf(".")));
+
     if (pages.indexOf("index") > -1) {
       opts.home = "index";
     } else if (pages.indexOf("home") > -1) {
@@ -66,8 +68,6 @@ class ElvisPlugin {
   public static getPages(files?: string[]): string[] {
     return files.filter((s) => {
       return (s.indexOf(".elvis.js") < 0) && (s.endsWith(".js") || s.endsWith(".ts"));
-    }).map((f) => {
-      return f.slice(0, (f.length - 3));
     });
   }
 
@@ -138,18 +138,12 @@ class ElvisPlugin {
 
   // single page application handler
   private spa(compiler: webpack.Compiler): void {
-    const calling = path.resolve(__dirname, "var/calling.ts");
-    if (fs.existsSync(calling)) {
-      if (this.ptr === ElvisPlugin.ref(calling)) {
-        return;
-      }
-    }
-
     let webpackOpts = compiler.options;
     if (!webpackOpts.devServer.historyApiFallback) {
       webpackOpts.devServer.historyApiFallback = true;
     }
 
+    const calling = path.resolve(__dirname, "var/calling.js");
     const pagesDir = path.resolve(this.root, this.options.pages);
     const pages = fs.readdirSync(pagesDir);
     const home = this.options.home[0].toUpperCase() + this.options.home.slice(1);
@@ -157,30 +151,36 @@ class ElvisPlugin {
     let lines = [
       "/* elvis spa caller */",
       `import { Router, Elvis } from "calling-elvis"`,
-      pages.map((page) => {
+      ElvisPlugin.getPages(pages).map((page) => {
         let widget = page[0].toUpperCase() + page.slice(1);
         let relative = path.relative(path.dirname(calling), `${pagesDir}/${page}`);
-        relative = relative.slice(0, (relative.length - 3));
-        return `import ${widget.slice(0, (widget.length - 3))} from "${relative}";`;
+        relative = relative.slice(0, relative.lastIndexOf("."));
+        return `import ${widget.slice(0, widget.lastIndexOf("."))} from "${relative}";`;
       }).join("\n"),
       "\nnew Elvis({",
       `  home: ${home},`,
       "  router: new Router({",
-      pages.map((page) => {
-        page = page.slice(0, (page.length - 3));
-        let widget = page[0].toUpperCase() + page.slice(1);
-        return `    "${page}": ${widget},`;
+      ElvisPlugin.getPages(pages).map((page) => {
+        if (page.indexOf(home.toLowerCase()) < 0) {
+          page = page.slice(0, page.lastIndexOf("."));
+          let widget = page[0].toUpperCase() + page.slice(1);
+          return `    "${page}": ${widget},`;
+        }
       }).join("\n"),
       "  }),",
       "}).calling();",
-    ];
-    fs.writeFileSync(calling, lines.join("\n"));
-    this.ptr = ElvisPlugin.ref(calling);
+    ].join("\n");
+
+    if (!fs.existsSync(calling) || (crypto.createHmac(
+      "md5", "elvis-md5"
+    ).update(lines).digest("hex") != ElvisPlugin.ref(calling))) {
+      fs.writeFileSync(calling, lines);
+    }
   }
 
   // server side rendering handler
   private ssr(compiler: webpack.Compiler): void {
-    console.log("ssr");
+    console.log(compiler);
   }
 
   // mode tunnel

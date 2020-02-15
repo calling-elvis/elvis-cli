@@ -4,6 +4,6 @@ export default Center(
   Text("Is anybody home?", {
     bold: true,
     italic: true,
-    size: 10,
+    size: 6,
   })
 );

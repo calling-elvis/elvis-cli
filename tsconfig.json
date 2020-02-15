@@ -14,7 +14,8 @@
     "target": "es6"
   },
   "include": [
-    "index.ts"
+    "index.ts",
+    "var/bootstrap.ts",
   ],
   "exclude": [
     "node_modules"

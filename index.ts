@@ -11,14 +11,29 @@ const HtmlPlugin = require("html-webpack-plugin");
 
 /* server side render plugin */
 interface IElvisPluginOptions {
+  home?: string;
   pages?: string;
   ssr?: boolean;
   title?: string;
 }
 
 class ElvisPlugin {
+  public static autoHome(): string {
+    return [
+      `import { Center, Elvis, Text } from "calling-elvis";\n`,
+      "export default Center(",
+      `  Text("Is anybody home?", {`,
+      "    bold: true,",
+      "    italic: true,",
+      "    size: 10,",
+      "  })",
+      ");"
+    ].join("\n");
+  }
+
   public static autoOpts(root: string): IElvisPluginOptions {
     let opts: IElvisPluginOptions = {
+      home: "index",
       pages: ".",
       ssr: false,
       title: "Calling Elvis",
@@ -29,7 +44,31 @@ class ElvisPlugin {
       opts.pages = "pages";
     }
 
+    // generate home
+    const pagesDir = path.resolve(root, opts.pages);
+    const pages = ElvisPlugin.getPages(fs.readdirSync(pagesDir));
+    if (pages.indexOf("index") > -1) {
+      opts.home = "index";
+    } else if (pages.indexOf("home") > -1) {
+      opts.home = "home";
+    } else if (pages.length > 0) {
+      opts.home = pages[0];
+    } else {
+      fs.writeFileSync(
+        path.resolve(pagesDir, "index.js"),
+        ElvisPlugin.autoHome()
+      );
+    }
+
     return opts;
+  }
+
+  public static getPages(files?: string[]): string[] {
+    return files.filter((s) => {
+      return (s.indexOf(".elvis.js") < 0) && (s.endsWith(".js") || s.endsWith(".ts"));
+    }).map((f) => {
+      return f.slice(0, (f.length - 3));
+    });
   }
 
   public static locate(cur: string): string {
@@ -99,11 +138,44 @@ class ElvisPlugin {
 
   // single page application handler
   private spa(compiler: webpack.Compiler): void {
+    const calling = path.resolve(__dirname, "var/calling.ts");
+    if (fs.existsSync(calling)) {
+      if (this.ptr === ElvisPlugin.ref(calling)) {
+        return;
+      }
+    }
+
     let webpackOpts = compiler.options;
     if (!webpackOpts.devServer.historyApiFallback) {
       webpackOpts.devServer.historyApiFallback = true;
     }
-    webpackOpts.entry = path.resolve(__dirname, "var/bootstrap.ts");
+
+    const pagesDir = path.resolve(this.root, this.options.pages);
+    const pages = fs.readdirSync(pagesDir);
+    const home = this.options.home[0].toUpperCase() + this.options.home.slice(1);
+
+    let lines = [
+      "/* elvis spa caller */",
+      `import { Router, Elvis } from "calling-elvis"`,
+      pages.map((page) => {
+        let widget = page[0].toUpperCase() + page.slice(1);
+        let relative = path.relative(path.dirname(calling), `${pagesDir}/${page}`);
+        relative = relative.slice(0, (relative.length - 3));
+        return `import ${widget.slice(0, (widget.length - 3))} from "${relative}";`;
+      }).join("\n"),
+      "\nnew Elvis({",
+      `  home: ${home},`,
+      "  router: new Router({",
+      pages.map((page) => {
+        page = page.slice(0, (page.length - 3));
+        let widget = page[0].toUpperCase() + page.slice(1);
+        return `    "${page}": ${widget},`;
+      }).join("\n"),
+      "  }),",
+      "}).calling();",
+    ];
+    fs.writeFileSync(calling, lines.join("\n"));
+    this.ptr = ElvisPlugin.ref(calling);
   }
 
   // server side rendering handler
@@ -123,9 +195,7 @@ class ElvisPlugin {
       if (plugins[i] instanceof HtmlPlugin) {
         type HtmlWebpackPlugin = typeof HtmlPlugin;
         let hp: HtmlWebpackPlugin = plugins[i];
-        console.log(this.options);
         hp.options.title = this.options.title;
-        console.log(hp.options);
       }
     }
 

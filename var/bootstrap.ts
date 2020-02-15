@@ -1,1 +1,2 @@
-console.log("hello, world!");
+/* elvis spa bootstrap */
+import("./calling");

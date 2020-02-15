@@ -15,9 +15,9 @@
   },
   "include": [
     "index.ts",
-    "var/bootstrap.ts",
   ],
   "exclude": [
+    "examples",
     "node_modules"
   ]
 }

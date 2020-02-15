@@ -1,6 +1,6 @@
 **/*node_modules
 **/*lib
 **/*elvis.js
-var/calling*
+**/*var
 yarn.lock
 yarn-error.log

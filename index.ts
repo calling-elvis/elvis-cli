@@ -5,7 +5,6 @@ import path from "path";
 import webpack from "webpack";
 import webpackDevServer from "webpack-dev-server";
 
-const conf = require(path.resolve(__dirname, "package.json"));
 const cwd = process.cwd();
 const HtmlPlugin = require("html-webpack-plugin");
 
@@ -209,6 +208,15 @@ class ElvisPlugin {
 
 /* webpack configs */
 function pack(code: number): void {
+  const varDir = path.resolve(__dirname, "var");
+  const bootstrap = path.resolve(varDir, "bootstrap.js");
+  if (!fs.existsSync(bootstrap)) {
+    if (!fs.existsSync(varDir)) {
+      fs.mkdirSync(varDir);
+    }
+    fs.writeFileSync(bootstrap, `import("./calling");`);
+  }
+
   let mode = "development";
   if (code !== 0) {
     mode = "production";
@@ -220,7 +228,7 @@ function pack(code: number): void {
       port: 1439
     },
     devtool: "inline-source-map",
-    entry: path.resolve(__dirname, "var/bootstrap.ts"),
+    entry: bootstrap,
     mode: mode,
     output: {
       filename: "elvis.bundle.js",
@@ -276,6 +284,13 @@ class Program {
   }
 
   static help() {
+    let conf: any = {};
+    if (fs.existsSync(path.resolve(__dirname, "package.json"))) {
+      conf = require(path.resolve(__dirname, "package.json"));
+    } else {
+      conf = require(path.resolve(__dirname, "../package.json"));
+    }
+
     console.log([
       `${conf.name} ${conf.version}\n`,
       `${conf.description}\n\n`,

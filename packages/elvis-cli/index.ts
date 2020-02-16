@@ -1,16 +1,16 @@
 #!/usr/bin/env ts-node
 import chalk from "chalk";
+import chokidar from "chokidar";
 import crypto from "crypto";
 import fs from "fs";
 import path from "path";
 import webpack from "webpack";
 import webpackDevServer from "webpack-dev-server";
-
-const cwd = process.cwd();
 const HtmlPlugin = require("html-webpack-plugin");
 
 enum Logger {
   Done,
+  Error,
   Info,
   Wait,
 }
@@ -27,6 +27,9 @@ function log(text: string, ty?: Logger): void {
   switch (ty) {
     case Logger.Done:
       status = chalk.greenBright("done");
+      break;
+    case Logger.Done:
+      status = chalk.red("error");
       break;
     case Logger.Wait:
       status = chalk.cyan("wait");
@@ -56,18 +59,23 @@ class ElvisPlugin {
   public static autoOpts(root: string): IElvisPluginOptions {
     let opts: IElvisPluginOptions = {
       home: "index",
-      pages: ".",
+      pages: "pages",
       ssr: false,
       title: "Calling Elvis!",
     }
 
     // locate pages entry
-    if (fs.existsSync(path.resolve(root, "pages"))) {
-      opts.pages = "pages";
+    const pagesDir = path.resolve(root, opts.pages);
+    if (fs.existsSync(pagesDir)) {
+      if (!fs.statSync(pagesDir).isDirectory()) {
+        log(`${pagesDir} is not a directory`, Logger.Error);
+        process.exit(1);
+      }
+    } else {
+      fs.mkdirSync(pagesDir);
     }
 
     // generate home
-    const pagesDir = path.resolve(root, opts.pages);
     const pages = ElvisPlugin.getPages(
       fs.readdirSync(pagesDir)
     ).map((f) => f.slice(0, f.lastIndexOf(".")));
@@ -121,6 +129,30 @@ class ElvisPlugin {
   root: string;
 
   constructor(options?: IElvisPluginOptions) {
+    this.initOpts(options);
+  }
+
+  // apply plugin to webpack
+  public apply(compiler: webpack.Compiler): void {
+    compiler.hooks.afterPlugins.tap("elvis-webpack-plugin", (compiler) => {
+      this.patchOptsToCompiler(compiler);
+    });
+
+    compiler.hooks.afterEnvironment.tap("elvis-webpack-plugin", () => {
+      log("starting development server ...", Logger.Wait);
+    });
+
+    compiler.hooks.afterResolvers.tap("elvis-webpack-plugin", () => {
+      log("waiting on http://localhost:1439 ...", Logger.Info);
+    });
+
+    compiler.hooks.done.tap("elvis-webpack-plugin", () => {
+      log("compiled successfully", Logger.Done);
+    });
+  }
+
+  private initOpts(options: IElvisPluginOptions): void {
+    const cwd = process.cwd();
     // locate root path
     let root = ElvisPlugin.locate(cwd);
     if (root === "") {
@@ -137,12 +169,13 @@ class ElvisPlugin {
     );
 
     // update local configurations
+    //
+    // wirite .elvis.js to disk if not exists
     const conf = path.resolve(this.root, ".elvis.js");
     if (fs.existsSync(conf)) {
       this.options = Object.assign(this.options, import(conf));
     } else {
       const opts = JSON.stringify(this.options, null, 2);
-      log("write .elvis.js to disk ...");
       fs.writeFileSync(conf, [
         "/* elvis config file */",
         `module.exports = ${opts}`,
@@ -150,41 +183,66 @@ class ElvisPlugin {
     }
   }
 
-  // apply plugin to webpack
-  public apply(compiler: webpack.Compiler): void {
-    log("init elvis-webpack-plugin ...", Logger.Info);
-    compiler.hooks.afterPlugins.tap("elvis-webpack-plugin", (compiler) => {
-      if (this.options.ssr) {
-        this.tunnel(compiler, 0);
-      } else {
-        this.tunnel(compiler, 1);
+  private patchOptsToCompiler(compiler: webpack.Compiler): void {
+    // patch for HTMLWebpackPlugin
+    let plugins = compiler.options.plugins;
+    for (const i in plugins) {
+      if (plugins[i] instanceof HtmlPlugin) {
+        type HtmlWebpackPlugin = typeof HtmlPlugin;
+        let hp: HtmlWebpackPlugin = plugins[i];
+        hp.options.title = this.options.title;
       }
-    });
+    }
 
-    compiler.hooks.afterEnvironment.tap("elvis-webpack-plugin", () => {
-      log("starting development server ...", Logger.Wait);
-    });
+    // spa-or-ssr adapter
+    const calling = path.resolve(__dirname, ".etc/calling.js");
+    const pagesDir = path.resolve(this.root, this.options.pages);
+    const home = this.options.home[0].toUpperCase() + this.options.home.slice(1);
+    if (!this.options.ssr) {
+      let webpackOpts = compiler.options;
+      if (!webpackOpts.devServer.historyApiFallback) {
+        webpackOpts.devServer.historyApiFallback = true;
+      }
 
-    compiler.hooks.afterResolvers.tap("elvis-webpack-plugin", () => {
-      log("waiting on localhost:1439 ...", Logger.Info);
-    });
+      // console.log();
 
-    compiler.hooks.done.tap("elvis-webpack-plugin", () => {
-      log("compiled successfully", Logger.Done);
-    });
+      // wach pages dir changes
+      this.updateSPARouter(calling, home, pagesDir);
+      chokidar.watch(pagesDir, {
+        ignored: (path: string, stats: fs.Stats) => {
+          if (path === pagesDir) {
+            return false;
+          } else if (stats != undefined && stats.isDirectory()) {
+            return true;
+          }
+
+          return /(?<!\.js|\.ts)$/.test(path);
+        },
+        ignoreInitial: true,
+        persistent: true,
+      })
+        .on("add", (file) => {
+          let name = path.basename(file).trim();
+          log(`add page ${chalk.cyan(name)}`, Logger.Info);
+          this.updateSPARouter(calling, home, pagesDir);
+        })
+        .on("unlink", (file) => {
+          let name = path.basename(file).trim();
+          log(`unlink page ${chalk.cyan(name)}`, Logger.Info);
+          this.updateSPARouter(calling, home, pagesDir);
+        });
+    } else {
+      // TODO: patch entry into ssr mode
+    }
   }
 
   // single page application handler
-  private spa(compiler: webpack.Compiler): void {
-    let webpackOpts = compiler.options;
-    if (!webpackOpts.devServer.historyApiFallback) {
-      webpackOpts.devServer.historyApiFallback = true;
-    }
-
-    const calling = path.resolve(__dirname, ".etc/calling.js");
-    const pagesDir = path.resolve(this.root, this.options.pages);
+  private updateSPARouter(
+    calling: string,
+    home: string,
+    pagesDir: string,
+  ): void {
     const pages = fs.readdirSync(pagesDir);
-    const home = this.options.home[0].toUpperCase() + this.options.home.slice(1);
 
     let lines = [
       "/* elvis spa caller */",
@@ -212,36 +270,7 @@ class ElvisPlugin {
     if (!fs.existsSync(calling) || (crypto.createHmac(
       "md5", "elvis-md5"
     ).update(lines).digest("hex") != ElvisPlugin.ref(calling))) {
-      log("update spa router ...");
       fs.writeFileSync(calling, lines);
-    }
-  }
-
-  // server side rendering handler
-  private ssr(compiler: webpack.Compiler): void {
-    console.log(compiler);
-  }
-
-  // mode tunnel
-  private tunnel(
-    compiler: webpack.Compiler,
-    adapter: number,
-  ): void {
-    let plugins = compiler.options.plugins;
-
-    // patch for HTMLWebpackPlugin
-    for (const i in plugins) {
-      if (plugins[i] instanceof HtmlPlugin) {
-        type HtmlWebpackPlugin = typeof HtmlPlugin;
-        let hp: HtmlWebpackPlugin = plugins[i];
-        hp.options.title = this.options.title;
-      }
-    }
-
-    if (adapter === 0) {
-      this.ssr(compiler);
-    } else {
-      this.spa(compiler);
     }
   }
 }
@@ -274,7 +303,7 @@ function pack(code: number): void {
     mode: mode,
     output: {
       filename: "elvis.bundle.js",
-      path: path.resolve(cwd, ".elvis"),
+      path: path.resolve(process.cwd(), ".elvis"),
     },
     plugins: [
       new HtmlPlugin(),

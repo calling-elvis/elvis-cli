@@ -20,8 +20,10 @@ class Elvis {
     (window as any).route = () => {
       const ptr: string = window.location.pathname.slice(1);
       const widget = this.router.routes[ptr];
-      this.proto = new ElvisPrototype(widget);
-      this.calling();
+      if (widget instanceof Widget) {
+        this.proto = new ElvisPrototype(widget);
+        this.calling();
+      }
     };
 
     // setters

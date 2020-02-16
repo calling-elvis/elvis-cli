@@ -42,6 +42,18 @@ function log(text: string, ty?: Logger): void {
   console.log(`[ ${status} ] ${text}`);
 }
 
+function getPackageJson(): any {
+  let conf: any = {};
+  const pj = path.resolve(__dirname, "./package.json");
+  if (fs.existsSync(pj)) {
+    conf = require(pj);
+  } else {
+    conf = require(path.resolve(__dirname, "../package.json"));
+  }
+
+  return conf;
+}
+
 class ElvisPlugin {
   public static autoHome(): string {
     return [
@@ -138,14 +150,6 @@ class ElvisPlugin {
       this.patchOptsToCompiler(compiler);
     });
 
-    compiler.hooks.afterEnvironment.tap("elvis-webpack-plugin", () => {
-      log("starting development server ...", Logger.Wait);
-    });
-
-    compiler.hooks.afterResolvers.tap("elvis-webpack-plugin", () => {
-      log("waiting on http://localhost:1439 ...", Logger.Info);
-    });
-
     compiler.hooks.done.tap("elvis-webpack-plugin", () => {
       log("compiled successfully", Logger.Done);
     });
@@ -199,15 +203,21 @@ class ElvisPlugin {
     const pagesDir = path.resolve(this.root, this.options.pages);
     const home = this.options.home[0].toUpperCase() + this.options.home.slice(1);
     if (!this.options.ssr) {
+      // update spa router
+      this.updateSPARouter(calling, home, pagesDir);
+
+      // check if is devServer
+      if (compiler.options.devServer === undefined) {
+        return;
+      }
+
+      // patch historyApiFallback
       let webpackOpts = compiler.options;
       if (!webpackOpts.devServer.historyApiFallback) {
         webpackOpts.devServer.historyApiFallback = true;
       }
 
-      // console.log();
-
-      // wach pages dir changes
-      this.updateSPARouter(calling, home, pagesDir);
+      // watch pages dir changes
       chokidar.watch(pagesDir, {
         ignored: (path: string, stats: fs.Stats) => {
           if (path === pagesDir) {
@@ -293,11 +303,6 @@ function pack(code: number): void {
   }
 
   const config: any = {
-    devServer: {
-      hot: true,
-      port: 1439,
-      noInfo: true,
-    },
     devtool: "inline-source-map",
     entry: bootstrap,
     mode: mode,
@@ -317,18 +322,33 @@ function pack(code: number): void {
 
   // webpack
   const compiler = webpack(config);
-  const devServerOptions = Object.assign({}, config.devServer);
+  const devServerOptions = {
+    hot: true,
+    port: 1439,
+    noInfo: true,
+  };
 
   // check mode
   if (code === 0) {
+    log("starting development server ...", Logger.Wait);
     const server = new webpackDevServer(compiler, devServerOptions);
-    server.listen(devServerOptions.port, "127.0.0.1", () => { });
-  } else {
-    compiler.run((err, stats) => {
+    server.listen(devServerOptions.port, "127.0.0.1", (err) => {
       if (err != null) {
-        console.error(`error: ${stats}`);
+        log(`start server failed.`, Logger.Error);
         process.exit(1);
       }
+      log("waiting on http://localhost:1439 ...", Logger.Info);
+    });
+  } else {
+    let packageJson = getPackageJson();
+    log(`building ${packageJson.name} ...`, Logger.Wait);
+    compiler.run((err, stats) => {
+      if (err != null) {
+        log(`compile failed.`, Logger.Error);
+        process.exit(1);
+      }
+
+      log(`${packageJson.name} has been packed at ${chalk.underline.cyan(config.output.path)}.`, Logger.Done);
     });
   }
 }
@@ -356,14 +376,7 @@ class Program {
   }
 
   static help() {
-    let conf: any = {};
-    const pj = path.resolve(__dirname, "./package.json");
-    if (fs.existsSync(pj)) {
-      conf = require(pj);
-    } else {
-      conf = require(path.resolve(__dirname, "../package.json"));
-    }
-
+    const conf: any = getPackageJson();
     console.log([
       `${conf.name} ${conf.version}\n`,
       `${conf.description}\n\n`,

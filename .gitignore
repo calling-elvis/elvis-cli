@@ -3,5 +3,7 @@
 **/*elvis.js
 **/*var
 **/*etc
+**/*.elvis
+pages
 yarn.lock
 yarn-error.log

@@ -142,7 +142,7 @@ class ElvisPlugin {
       webpackOpts.devServer.historyApiFallback = true;
     }
 
-    const calling = path.resolve(__dirname, "var/calling.js");
+    const calling = path.resolve(__dirname, "etc/calling.js");
     const pagesDir = path.resolve(this.root, this.options.pages);
     const pages = fs.readdirSync(pagesDir);
     const home = this.options.home[0].toUpperCase() + this.options.home.slice(1);
@@ -208,11 +208,11 @@ class ElvisPlugin {
 
 /* webpack configs */
 function pack(code: number): void {
-  const varDir = path.resolve(__dirname, "var");
-  const bootstrap = path.resolve(varDir, "bootstrap.js");
+  const etc = path.resolve(__dirname, "etc");
+  const bootstrap = path.resolve(etc, "bootstrap.js");
   if (!fs.existsSync(bootstrap)) {
-    if (!fs.existsSync(varDir)) {
-      fs.mkdirSync(varDir);
+    if (!fs.existsSync(etc)) {
+      fs.mkdirSync(etc);
     }
     fs.writeFileSync(bootstrap, `import("./calling");`);
   }
@@ -285,8 +285,9 @@ class Program {
 
   static help() {
     let conf: any = {};
-    if (fs.existsSync(path.resolve(__dirname, "package.json"))) {
-      conf = require(path.resolve(__dirname, "package.json"));
+    const pj = path.resolve(__dirname, "./package.json");
+    if (fs.existsSync(pj)) {
+      conf = require(pj);
     } else {
       conf = require(path.resolve(__dirname, "../package.json"));
     }

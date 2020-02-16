@@ -1,0 +1,25 @@
+{
+  "name": "create-elvis-app",
+  "bin": {
+    "create-elvis-app": "lib/index.js"
+  },
+  "collaborators": [
+    "clearloop <udtrokia@gmail.com>"
+  ],
+  "description": "Calling Elvis, is anybody home?",
+  "version": "0.1.0",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/calling-elvis/elvis.js"
+  },
+  "files": [
+    "lib/index.js"
+  ],
+  "main": "lib/index.js",
+  "homepage": "https://github.com/clearloop/elvis",
+  "sideEffects": false,
+  "dependencies": {
+    
+  }
+}

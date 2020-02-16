@@ -1,3 +1,4 @@
+#!/usr/bin/env ts-node
 import boxen from "boxen";
 import chalk from "chalk";
 import spawn from "cross-spawn";
@@ -113,6 +114,9 @@ async function log(text: string, ty?: Logger): Promise<void> {
     case Logger.Wait:
       status = chalk.cyan("wait");
       break;
+    case Logger.Error:
+      status = chalk.red("error");
+      break;
     default:
       status = chalk.dim(chalk.cyan("info"));
       break;
@@ -149,6 +153,11 @@ async function whatsYourProjectNamed(): Promise<string> {
         return true;
       }
     }
+  }, {
+    onCancel: (_) => {
+      log("Don't stop Me Now! I don't want to stop at all!", Logger.Error);
+      process.exit(1);
+    },
   });
 
   if (typeof res.name === 'string') {

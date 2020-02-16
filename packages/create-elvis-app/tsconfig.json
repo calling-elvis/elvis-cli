@@ -5,6 +5,7 @@
     "allowSyntheticDefaultImports": true,
     "baseUrl": ".",
     "esModuleInterop": true,
+    "module": "commonjs",
     "outDir": "lib",
     "moduleResolution": "node",
     "noImplicitAny": true,

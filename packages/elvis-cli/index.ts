@@ -1,4 +1,5 @@
 #!/usr/bin/env ts-node
+import chalk from "chalk";
 import crypto from "crypto";
 import fs from "fs";
 import path from "path";
@@ -8,11 +9,34 @@ import webpackDevServer from "webpack-dev-server";
 const cwd = process.cwd();
 const HtmlPlugin = require("html-webpack-plugin");
 
+enum Logger {
+  Done,
+  Info,
+  Wait,
+}
+
 interface IElvisPluginOptions {
   home?: string;
   pages?: string;
   ssr?: boolean;
   title?: string;
+}
+
+function log(text: string, ty?: Logger): void {
+  let status = "";
+  switch (ty) {
+    case Logger.Done:
+      status = chalk.greenBright("done");
+      break;
+    case Logger.Wait:
+      status = chalk.cyan("wait");
+      break;
+    default:
+      status = chalk.dim(chalk.cyan("info"));
+      break;
+  }
+
+  console.log(`[ ${status} ] ${text}`);
 }
 
 class ElvisPlugin {
@@ -34,7 +58,7 @@ class ElvisPlugin {
       home: "index",
       pages: ".",
       ssr: false,
-      title: "Calling Elvis",
+      title: "Calling Elvis!",
     }
 
     // locate pages entry
@@ -55,6 +79,7 @@ class ElvisPlugin {
     } else if (pages.length > 0) {
       opts.home = pages[0];
     } else {
+      log("write index to disk ...");
       fs.writeFileSync(
         path.resolve(pagesDir, "index.js"),
         ElvisPlugin.autoHome()
@@ -117,6 +142,7 @@ class ElvisPlugin {
       this.options = Object.assign(this.options, import(conf));
     } else {
       const opts = JSON.stringify(this.options, null, 2);
+      log("write .elvis.js to disk ...");
       fs.writeFileSync(conf, [
         "/* elvis config file */",
         `module.exports = ${opts}`,
@@ -126,12 +152,25 @@ class ElvisPlugin {
 
   // apply plugin to webpack
   public apply(compiler: webpack.Compiler): void {
+    log("init elvis-webpack-plugin ...", Logger.Info);
     compiler.hooks.afterPlugins.tap("elvis-webpack-plugin", (compiler) => {
       if (this.options.ssr) {
         this.tunnel(compiler, 0);
       } else {
         this.tunnel(compiler, 1);
       }
+    });
+
+    compiler.hooks.afterEnvironment.tap("elvis-webpack-plugin", () => {
+      log("starting development server ...", Logger.Wait);
+    });
+
+    compiler.hooks.afterResolvers.tap("elvis-webpack-plugin", () => {
+      log("waiting on localhost:1439 ...", Logger.Info);
+    });
+
+    compiler.hooks.done.tap("elvis-webpack-plugin", () => {
+      log("compiled successfully", Logger.Done);
     });
   }
 
@@ -142,7 +181,7 @@ class ElvisPlugin {
       webpackOpts.devServer.historyApiFallback = true;
     }
 
-    const calling = path.resolve(__dirname, "etc/calling.js");
+    const calling = path.resolve(__dirname, ".etc/calling.js");
     const pagesDir = path.resolve(this.root, this.options.pages);
     const pages = fs.readdirSync(pagesDir);
     const home = this.options.home[0].toUpperCase() + this.options.home.slice(1);
@@ -173,6 +212,7 @@ class ElvisPlugin {
     if (!fs.existsSync(calling) || (crypto.createHmac(
       "md5", "elvis-md5"
     ).update(lines).digest("hex") != ElvisPlugin.ref(calling))) {
+      log("update spa router ...");
       fs.writeFileSync(calling, lines);
     }
   }
@@ -208,12 +248,13 @@ class ElvisPlugin {
 
 /* webpack configs */
 function pack(code: number): void {
-  const etc = path.resolve(__dirname, "etc");
+  const etc = path.resolve(__dirname, ".etc");
   const bootstrap = path.resolve(etc, "bootstrap.js");
   if (!fs.existsSync(bootstrap)) {
     if (!fs.existsSync(etc)) {
       fs.mkdirSync(etc);
     }
+    log("bootstrap elvis ...");
     fs.writeFileSync(bootstrap, `import("./calling");`);
   }
 
@@ -225,7 +266,8 @@ function pack(code: number): void {
   const config: any = {
     devServer: {
       hot: true,
-      port: 1439
+      port: 1439,
+      noInfo: true,
     },
     devtool: "inline-source-map",
     entry: bootstrap,
@@ -241,6 +283,7 @@ function pack(code: number): void {
     resolve: {
       extensions: [".ts", ".js", ".wasm"],
     },
+    watch: true,
   };
 
   // webpack

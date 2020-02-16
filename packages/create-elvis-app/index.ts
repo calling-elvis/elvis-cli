@@ -229,7 +229,7 @@ async function showCaveat(appName: string, root: string, useYarn: boolean) {
   console.log(boxen(text, {
     borderColor: "cyan",
     margin: 1,
-    padding: 2,
+    padding: 1,
   }))
 }
 

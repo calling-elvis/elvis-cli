@@ -3,6 +3,8 @@ import chalk from "chalk";
 import chokidar from "chokidar";
 import crypto from "crypto";
 import fs from "fs";
+import handler from "serve-handler";
+import http from "http";
 import path from "path";
 import webpack from "webpack";
 import webpackDevServer from "webpack-dev-server";
@@ -285,76 +287,93 @@ class ElvisPlugin {
   }
 }
 
-/* webpack configs */
-function pack(code: number): void {
-  const etc = path.resolve(__dirname, ".etc");
-  const bootstrap = path.resolve(etc, "bootstrap.js");
-  if (!fs.existsSync(bootstrap)) {
-    if (!fs.existsSync(etc)) {
-      fs.mkdirSync(etc);
-    }
-    log("bootstrap elvis ...");
-    fs.writeFileSync(bootstrap, `import("./calling");`);
-  }
-
-  let mode = "development";
-  if (code !== 0) {
-    mode = "production";
-  }
-
-  const config: any = {
-    devtool: "inline-source-map",
-    entry: bootstrap,
-    mode: mode,
-    output: {
-      filename: "elvis.bundle.js",
-      path: path.resolve(process.cwd(), ".elvis"),
-    },
-    plugins: [
-      new HtmlPlugin(),
-      new ElvisPlugin(),
-    ],
-    resolve: {
-      extensions: [".ts", ".js", ".wasm"],
-    },
-    watch: true,
-  };
-
-  // webpack
-  const compiler = webpack(config);
-  const devServerOptions = {
-    hot: true,
-    port: 1439,
-    noInfo: true,
-  };
-
-  // check mode
-  if (code === 0) {
-    log("starting development server ...", Logger.Wait);
-    const server = new webpackDevServer(compiler, devServerOptions);
-    server.listen(devServerOptions.port, "127.0.0.1", (err) => {
-      if (err != null) {
-        log(`start server failed.`, Logger.Error);
-        process.exit(1);
-      }
-      log("waiting on http://localhost:1439 ...", Logger.Info);
-    });
-  } else {
-    let packageJson = getPackageJson();
-    log(`building ${packageJson.name} ...`, Logger.Wait);
-    compiler.run((err, stats) => {
-      if (err != null) {
-        log(`compile failed.`, Logger.Error);
-        process.exit(1);
-      }
-
-      log(`${packageJson.name} has been packed at ${chalk.underline.cyan(config.output.path)}.`, Logger.Done);
-    });
-  }
-}
 
 /* simple cli program */
 class Program {
+  /* webpack configs */
+  static pack(code: number): void {
+    const etc = path.resolve(__dirname, ".etc");
+    const bootstrap = path.resolve(etc, "bootstrap.js");
+    if (!fs.existsSync(bootstrap)) {
+      if (!fs.existsSync(etc)) {
+        fs.mkdirSync(etc);
+      }
+      log("bootstrap elvis ...");
+      fs.writeFileSync(bootstrap, `import("./calling");`);
+    }
+
+    let mode = "development";
+    if (code !== 0) {
+      mode = "production";
+    }
+
+    const config: any = {
+      devtool: "inline-source-map",
+      entry: bootstrap,
+      mode: mode,
+      output: {
+        filename: "elvis.bundle.js",
+        path: path.resolve(process.cwd(), ".elvis"),
+      },
+      plugins: [
+        new HtmlPlugin(),
+        new ElvisPlugin(),
+      ],
+      resolve: {
+        extensions: [".ts", ".js", ".wasm"],
+      },
+      watch: true,
+    };
+
+    // webpack
+    const compiler = webpack(config);
+    const devServerOptions = {
+      hot: true,
+      port: 1439,
+      noInfo: true,
+    };
+
+    // check mode
+    if (code === 0) {
+      log("starting development server ...", Logger.Wait);
+      const server = new webpackDevServer(compiler, devServerOptions);
+      server.listen(devServerOptions.port, "127.0.0.1", (err) => {
+        if (err != null) {
+          log(`start server failed.`, Logger.Error);
+          process.exit(1);
+        }
+        log("waiting on http://localhost:1439 ...", Logger.Info);
+      });
+    } else {
+      let packageJson = getPackageJson();
+      log(`building ${packageJson.name} ...`, Logger.Wait);
+      compiler.run((err, stats) => {
+        if (err != null) {
+          log(`compile failed.`, Logger.Error);
+          process.exit(1);
+        }
+
+        log(`${packageJson.name} has been packed at ${chalk.underline.cyan(config.output.path)}.`, Logger.Done);
+      });
+    }
+  }
+
+  static start(): void {
+    const http = require('http');
+    const dist = path.resolve(process.cwd(), ".elvis");
+    const conf = getPackageJson();
+    const server = http.createServer((request: http.IncomingMessage, response: http.ServerResponse) => {
+      return handler(request, response, {
+        "cleanUrls": true,
+        "public": dist,
+      });
+    })
+
+    server.listen(1439, () => {
+      log(`${conf.name} is firing at ${chalk.underline.cyan("http://localhost:1439")} ...`, Logger.Wait);
+    });
+  }
+
   static run(): void {
     const argv = process.argv;
     if (argv.length == 2) {
@@ -363,11 +382,14 @@ class Program {
     }
 
     switch (argv[2].trim()) {
-      case 'build':
-        pack(1);
+      case "dev":
+        Program.pack(0);
         break;
-      case 'dev':
-        pack(0);
+      case "build":
+        Program.pack(1);
+        break;
+      case "start":
+        Program.start()
         break;
       default:
         Program.help();
@@ -383,9 +405,10 @@ class Program {
       "USAGE: \n",
       "    elvis   [SUBCOMMANND]\n\n",
       "SUBCOMMANDS: \n",
-      "    build   Build your satellite!\n",
-      "    doc     Serve the Elvis Book!\n",
       "    dev     Calling Elvis!\n",
+      "    doc     Serve the Elvis Book!\n",
+      "    build   Build your satellite!\n",
+      "    start   Launch your project to Mars!\n",
       "    help    Prints this Message!"
     ].join(""));
   }

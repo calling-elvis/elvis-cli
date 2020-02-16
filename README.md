@@ -6,39 +6,37 @@ This project ports [Elvis][1] to javascript, yet another front-end UI library, b
 
 ### Starting automatically
 
-```sh
+```text
 $ yarn create elvis-app
 ✔ What is your project named? … my-awesome-app
 [ info ] Generating elvis files ...
 [ wait ] Installing elvis dependencies ...
 [ done ] Let's Roll up for the Magical Mystery Tour!
 
-   ┌───────────────────────────────────────────────────────────────────────────────────┐
-   │                                                                                   │
-   │                                                                                   │
-   │      Success! Created my-awesome-app at:                                          │
-   │                                                                                   │
-   │        /Users/mercury/code/elvis.js/packages/create-elvis-app/my-awesome-app      │
-   │                                                                                   │
-   │      Inside that directory, you can run several commands:                         │
-   │                                                                                   │
-   │        - yarn dev:    Starts the development server.                              │
-   │        - yarn build:  Builds my-awesome-app for production.                       │
-   │        - yarn start:  Runs my-awesome-app production mode.                        │
-   │                                                                                   │
-   │      We suggest that you begin by typing:                                         │
-   │                                                                                   │
-   │        - cd my-awesome-app                                                        │
-   │        - yarn dev                                                                 │
-   │                                                                                   │
-   │                                                                                   │
-   │                                                                                   │
-   └───────────────────────────────────────────────────────────────────────────────────┘
+   ┌─────────────────────────────────────────────────────────────────────────────┐
+   │                                                                             │
+   │   Success! Created my-awesome-app at:                                       │
+   │                                                                             │
+   │     /Users/mercury/code/elvis.js/packages/create-elvis-app/my-awesome-app   │
+   │                                                                             │
+   │   Inside that directory, you can run several commands:                      │
+   │                                                                             │
+   │     - yarn dev:    Starts the development server.                           │
+   │     - yarn build:  Builds my-awesome-app for production.                    │
+   │     - yarn start:  Runs my-awesome-app production mode.                     │
+   │                                                                             │
+   │   We suggest that you begin by typing:                                      │
+   │                                                                             │
+   │     - cd my-awesome-app                                                     │
+   │     - yarn dev                                                              │
+   │                                                                             │
+   │                                                                             │
+   └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ### Starting manually
 
-```sh
+```text
 $ yarn global add elvis-cli
 elvis-cli 0.1.8
 Calling Elvis, is anybody home?
@@ -46,10 +44,11 @@ Calling Elvis, is anybody home?
 USAGE: 
     elvis   [SUBCOMMANND]
 
-SUBCOMMANDS: 
-    build   Build your satellite!
-    doc     Serve the Elvis Book!
+SUBCOMMANDS:
     dev     Calling Elvis!
+    doc     Serve the Elvis Book!
+    build   Build your satellite!
+    start   Launch your project to Mars!
     help    Prints this Message!
 ```
 

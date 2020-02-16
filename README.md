@@ -13,25 +13,26 @@ $ yarn create elvis-app
 [ wait ] Installing elvis dependencies ...
 [ done ] Let's Roll up for the Magical Mystery Tour!
 
-   ┌─────────────────────────────────────────────────────────────────────────────┐
-   │                                                                             │
-   │   Success! Created my-awesome-app at:                                       │
-   │                                                                             │
-   │     /Users/mercury/code/elvis.js/packages/create-elvis-app/my-awesome-app   │
-   │                                                                             │
-   │   Inside that directory, you can run several commands:                      │
-   │                                                                             │
-   │     - yarn dev:    Starts the development server.                           │
-   │     - yarn build:  Builds my-awesome-app for production.                    │
-   │     - yarn start:  Runs my-awesome-app production mode.                     │
-   │                                                                             │
-   │   We suggest that you begin by typing:                                      │
-   │                                                                             │
-   │     - cd my-awesome-app                                                     │
-   │     - yarn dev                                                              │
-   │                                                                             │
-   │                                                                             │
-   └─────────────────────────────────────────────────────────────────────────────┘
+
+   ┌─────────────────────────────────────────────────────────────┐
+   │                                                             │
+   │   Success! Created my-awesome-app at:                       │
+   │                                                             │
+   │     /path/to/my-awesome-app                                 │
+   │                                                             │
+   │   Inside that directory, you can run several commands:      │
+   │                                                             │
+   │     - yarn dev:    Starts the development server.           │
+   │     - yarn build:  Builds my-awesome-app for production.    │
+   │     - yarn start:  Runs my-awesome-app production mode.     │
+   │                                                             │
+   │   We suggest that you begin by typing:                      │
+   │                                                             │
+   │     - cd my-awesome-app                                     │
+   │     - yarn dev                                              │
+   │                                                             │
+   │                                                             │
+   └─────────────────────────────────────────────────────────────┘
 ```
 
 ### Starting manually

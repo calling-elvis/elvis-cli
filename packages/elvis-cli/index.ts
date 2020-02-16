@@ -1,14 +1,18 @@
 #!/usr/bin/env ts-node
 import chalk from "chalk";
+import { execSync } from "child_process";
 import chokidar from "chokidar";
 import crypto from "crypto";
 import fs from "fs";
+import got from "got"
 import handler from "serve-handler";
 import http from "http";
 import path from "path";
+import tar from "tar";
 import webpack from "webpack";
 import webpackDevServer from "webpack-dev-server";
 const HtmlPlugin = require("html-webpack-plugin");
+const promisePipe = require("promisepipe");
 
 enum Logger {
   Done,
@@ -374,6 +378,32 @@ class Program {
     });
   }
 
+  static async docs(): Promise<void> {
+    const home = process.env[(process.platform == 'win32') ? 'USERPROFILE' : 'HOME'];
+    const docsDir = path.resolve(home, ".elvis/docs");
+    if (fs.existsSync(docsDir)) {
+      try {
+        execSync(`open ${path.resolve(docsDir, "index.html")}`);
+        process.exit(0);
+      } catch (_) {
+        log("open docs filed", Logger.Error);
+        process.exit(1);
+      }
+    }
+
+    if (!fs.existsSync(path.resolve(home, ".elvis"))) {
+      fs.mkdirSync(path.resolve(home, ".elvis"));
+    }
+
+    log("downloading the elvis book ...", Logger.Wait);
+    await promisePipe(
+      got.stream("https://github.com/calling-elvis/the-elvis-book/releases/download/v0.1.0/docs.tar.gz"),
+      tar.extract({ cwd: path.resolve(home, ".elvis"), strip: 3 }, ["docs"])
+    );
+
+    execSync(`open ${path.resolve(docsDir, "index.html")}`);
+  }
+
   static run(): void {
     const argv = process.argv;
     if (argv.length == 2) {
@@ -384,6 +414,9 @@ class Program {
     switch (argv[2].trim()) {
       case "dev":
         Program.pack(0);
+        break;
+      case "docs":
+        Program.docs();
         break;
       case "build":
         Program.pack(1);
@@ -406,7 +439,7 @@ class Program {
       "    elvis   [SUBCOMMANND]\n\n",
       "SUBCOMMANDS: \n",
       "    dev     Calling Elvis!\n",
-      "    doc     Serve the Elvis Book!\n",
+      "    docs    Serve the Elvis Book!\n",
       "    build   Build your satellite!\n",
       "    start   Launch your project to Mars!\n",
       "    help    Prints this Message!"

@@ -232,7 +232,7 @@ function pack(code: number): void {
     mode: mode,
     output: {
       filename: "elvis.bundle.js",
-      path: path.resolve(cwd, "dist"),
+      path: path.resolve(cwd, ".elvis"),
     },
     plugins: [
       new HtmlPlugin(),

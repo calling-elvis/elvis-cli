@@ -20,6 +20,11 @@
   "homepage": "https://github.com/clearloop/elvis",
   "sideEffects": false,
   "dependencies": {
-    
+    "@types/prompts": "^2.0.3",
+    "prompts": "^2.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^12.6.8",
+    "chalk": "^3.0.0"
   }
 }

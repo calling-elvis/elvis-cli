@@ -1,7 +1,12 @@
 {
   "name": "elvisjs-project",
   "private": true,
+  "scripts": {
+    "elvis": "ts-node packages/elvis-cli/index"
+  },
   "workspaces": [
     "packages/*"
-  ]
+  ],
+  "dependencies": {
+  }
 }

@@ -7,7 +7,7 @@
     "clearloop <udtrokia@gmail.com>"
   ],
   "description": "Calling Elvis, is anybody home?",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -20,10 +20,12 @@
   "homepage": "https://github.com/clearloop/elvis",
   "sideEffects": false,
   "dependencies": {
+    "@types/cross-spawn": "^6.0.1",
     "@types/node": "^13.7.1",
     "@types/webpack": "^4.41.6",
     "@types/webpack-dev-server": "^3.10.0",
-    "calling-elvis": "^0.1.6",
+    "calling-elvis": "^0.1.7",
+    "cross-spawn": "^7.0.1",
     "html-webpack-plugin": "^3.2.0",
     "webpack": "^4.41.6",
     "webpack-dev-server": "^3.10.3",

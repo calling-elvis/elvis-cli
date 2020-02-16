@@ -3,6 +3,7 @@ import {
   Center, Colors,
   FlexBasis, FlexDirection,
   GridAuto, GridFlow, GridTemplate,
+  Widget,
 } from "elvis-web";
 import Elvis from "./src/elvis";
 import { Align, Col, Container, Flex, Grid, List, MultiColumn, Row, SizedBox } from "./src/layouts";
@@ -21,4 +22,5 @@ export {
   Router, Row,
   SizedBox,
   Text,
+  Widget,
 };

@@ -1,9 +1,35 @@
+import boxen from "boxen";
 import chalk from "chalk";
 import spawn from "cross-spawn";
 import { execSync } from "child_process";
 import fs from "fs";
 import path from "path";
 import prompts from "prompts";
+
+const caveat: (
+  appName: string,
+  root: string,
+  cmd: string,
+) => Promise<string> = async (
+  appName: string,
+  root: string,
+  cmd: string,
+  ) => `
+${chalk.greenBright("Success!")} Created ${chalk.cyan(appName)} at:
+
+  ${chalk.dim(root)}
+
+Inside that directory, you can run several commands: 
+
+  - ${chalk.bold.cyan(cmd + " dev")}:    Starts the development server.
+  - ${chalk.bold.cyan(cmd + " build")}:  Builds ${appName} for production.
+  - ${chalk.bold.cyan(cmd + " start")}:  Runs ${appName} production mode.
+
+We suggest that you begin by typing:
+
+  - ${chalk.bold.cyan("cd")} ${appName}
+  - ${chalk.bold.cyan(cmd + " dev")}
+`.slice(1);
 
 const home: (appName: string) => Promise<string> = async (appName: string) => `
 /* home page for ${appName} */
@@ -71,6 +97,30 @@ Don\`t Think Twice, it\`s Alright.
 [3]: https://github.com/clearloop/elvis
 `.slice(1);
 
+enum Logger {
+  Done,
+  Info,
+  Wait,
+  Error,
+}
+
+async function log(text: string, ty?: Logger): Promise<void> {
+  let status = "";
+  switch (ty) {
+    case Logger.Done:
+      status = chalk.greenBright("done");
+      break;
+    case Logger.Wait:
+      status = chalk.cyan("wait");
+      break;
+    default:
+      status = chalk.dim(chalk.cyan("info"));
+      break;
+  }
+
+  console.log(`[ ${status} ] ${text}`);
+}
+
 async function shouldUseYarn(): Promise<boolean> {
   try {
     execSync('yarnpkg --version', { stdio: "ignore" })
@@ -116,45 +166,62 @@ async function createApp(appName: string, root: string): Promise<void> {
   fs.writeFileSync(path.resolve(root, "README"), await readme(appName));
 }
 
-async function install(
+function install(
   root: string,
   useYarn: boolean,
   dependencies: string[],
 ): Promise<void> {
-  let command: string
-  let args: string[]
-  if (useYarn) {
-    command = "yarnpkg"
-    args = dependencies ? ["add", "--exact"] : ["install"]
-    if (dependencies) {
-      args.push(...dependencies)
+  return new Promise((resolve, reject) => {
+    let command: string
+    let args: string[]
+    if (useYarn) {
+      command = "yarnpkg"
+      args = dependencies ? ["add", "--exact"] : ["install"]
+      if (dependencies) {
+        args.push(...dependencies)
+      }
+      args.push("--cwd", root)
+    } else {
+      command = "npm"
+      args = ([
+        "install",
+        dependencies && "--save",
+        dependencies && "--save-exact",
+        "--loglevel",
+        "error",
+      ].filter(Boolean) as string[]).concat(dependencies || [])
     }
-    args.push("--cwd", root)
-  } else {
-    command = "npm"
-    args = ([
-      "install",
-      dependencies && "--save",
-      dependencies && "--save-exact",
-      "--loglevel",
-      "error",
-    ].filter(Boolean) as string[]).concat(dependencies || [])
+
+    const child = spawn(command, args, {
+      stdio: "ignore",
+      env: { ...process.env, ADBLOCK: "1", DISABLE_OPENCOLLECTIVE: "1" },
+    })
+
+    child.on("close", (code) => {
+      if (code !== 0) {
+        log(chalk.red(`${command} ${args.join(" ")}`), Logger.Error);
+        reject({ command: `${command} ${args.join(' ')}` });
+        process.exit(1);
+      }
+
+      log("Let`s Roll up for the Magical Mystery Tour!", Logger.Done);
+      resolve();
+    })
+  });
+}
+
+async function showCaveat(appName: string, root: string, useYarn: boolean) {
+  let cmd: string = "yarn";
+  if (!useYarn) {
+    cmd = "npm run";
   }
 
-  const child = spawn(command, args, {
-    stdio: "ignore",
-    env: { ...process.env, ADBLOCK: "1", DISABLE_OPENCOLLECTIVE: "1" },
-  })
-
-  child.on("close", code => {
-    if (code !== 0) {
-      console.error(chalk.red(`${command} ${args.join(" ")}`));
-      return
-    } else {
-      console.log(chalk.cyan("\n...All done!\n"))
-      console.log(chalk.cyan("Let`s Roll up for the Magical Mystery Tour!"))
-    }
-  })
+  let text = await caveat(appName, root, cmd);
+  console.log(boxen(text, {
+    borderColor: "cyan",
+    margin: 1,
+    padding: 2,
+  }))
 }
 
 (async function() {
@@ -162,9 +229,9 @@ async function install(
   const appName = await whatsYourProjectNamed();
   const root = path.resolve(process.cwd(), appName);
 
+  await log("Generating elvis files ...", Logger.Info);
   await createApp(appName, root);
-  await install(root, useYarn, [
-    "elvis-cli",
-    "calling-elvis",
-  ]);
+  await log("Installing elvis dependencies ...", Logger.Wait);
+  await install(root, useYarn, ["elvis-cli", "calling-elvis"]);
+  await showCaveat(appName, root, useYarn);
 })();

@@ -13,7 +13,6 @@ $ yarn create elvis-app
 [ wait ] Installing elvis dependencies ...
 [ done ] Let's Roll up for the Magical Mystery Tour!
 
-
    ┌─────────────────────────────────────────────────────────────┐
    │                                                             │
    │   Success! Created my-awesome-app at:                       │
@@ -47,7 +46,7 @@ USAGE:
 
 SUBCOMMANDS:
     dev     Calling Elvis!
-    doc     Serve the Elvis Book!
+    docs    Serve the Elvis Book!
     build   Build your satellite!
     start   Launch your project to Mars!
     help    Prints this Message!

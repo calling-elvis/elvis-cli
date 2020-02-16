@@ -23,6 +23,7 @@ ${chalk.greenBright("Success!")} Created ${chalk.cyan(appName)} at:
 Inside that directory, you can run several commands: 
 
   - ${chalk.bold.cyan(cmd + " dev")}:    Starts the development server.
+  - ${chalk.bold.cyan(cmd + " docs")}:   Open The Elvis Book.
   - ${chalk.bold.cyan(cmd + " build")}:  Builds ${appName} for production.
   - ${chalk.bold.cyan(cmd + " start")}:  Runs ${appName} production mode.
 
@@ -53,7 +54,7 @@ const packageJson: (appName: string) => Promise<string> = async (appName: string
   "scripts": {
     "build": "elvis build",
     "dev": "elvis dev",
-    "doc": "elvis doc",
+    "docs": "elvis docs",
     "start": "elvis start"
   }
 }
@@ -172,7 +173,7 @@ async function createApp(appName: string, root: string): Promise<void> {
   fs.mkdirSync(path.resolve(root, "pages"));
   fs.writeFileSync(path.resolve(root, "pages/index.js"), await home(appName));
   fs.writeFileSync(path.resolve(root, "package.json"), await packageJson(appName));
-  fs.writeFileSync(path.resolve(root, "README"), await readme(appName));
+  fs.writeFileSync(path.resolve(root, "README.md"), await readme(appName));
 }
 
 function install(

@@ -1,43 +1,73 @@
-# Calling Elvis 🦀 🕸  🎸 📡 🚀 🪐 🛰
+# elvis.js
 
-Is anybody home?
+This project ports [Elvis][1] to javascript, yet another front-end UI library, but **powered by wasm**, 21st Century Schizoid Magic!
 
-As we know, `Elvis` is a famous rock star, and both a famous rock song named `Calling Elvis` wrote by `Dire Straits` which inspired a unknown rock star to write down these chords.
+## Getting Start
 
-For now, Elvis, the rock star, will rise, once again, **beyond** the internet —— truely your wasm web library, 🦀 + 🕸  => 💖
+### Starting automatically
 
-[The Evlis Book][1] mainly talks about the usage of the npm package `calling-elvis`, and if you want to use `low-level` api rusting the web, plz check out [elvis' rust doc][2].
+```text
+$ yarn create elvis-app
+✔ What is your project named? … my-awesome-app
+[ info ] Generating elvis files ...
+[ wait ] Installing elvis dependencies ...
+[ done ] Let's Roll up for the Magical Mystery Tour!
 
-## Goals 🎯
-
-Writing web pages in **pure javascript** using wasm bindings, **without** `jsx` or `any other` complex syntax, **just javascript**, of course, **not** writing `html` nor `css` either.
-
-## Roll up for the Magical Mystery Tour! 🌈
-
-🧙‍♂️ 🤹‍♂️ Here we go! Roll up, roll up for the mystery tour, the magical mystery tour is waiting to take you away! Hoping to take you away! Coming to take you away! Dying to take you away, take you today! 🛸
-
-🎻 Let me take you down, cause I'm going to,
-
-```js
-import { Colors, Elvis, Text } from "calling-elvis";
-
-const Home = Text("Pink is the Pig!", {
-  bold: true,
-  italic: true,
-  size: 10,
-  color: Colors.PinkAccent(),
-});
-
-new Elvis({
-  home: Home,
-}).calling();
+   ┌─────────────────────────────────────────────────────────────┐
+   │                                                             │
+   │   Success! Created my-awesome-app at:                       │
+   │                                                             │
+   │     /path/to/my-awesome-app                                 │
+   │                                                             │
+   │   Inside that directory, you can run several commands:      │
+   │                                                             │
+   │     - yarn dev:    Starts the development server.           │
+   │     - yarn build:  Builds my-awesome-app for production.    │
+   │     - yarn start:  Runs my-awesome-app production mode.     │
+   │                                                             │
+   │   We suggest that you begin by typing:                      │
+   │                                                             │
+   │     - cd my-awesome-app                                     │
+   │     - yarn dev                                              │
+   │                                                             │
+   │                                                             │
+   └─────────────────────────────────────────────────────────────┘
 ```
- **Strawberry Fields** 🧑‍🚀
 
+### Starting manually
+
+```text
+$ yarn global add elvis-cli
+elvis-cli 0.1.8
+Calling Elvis, is anybody home?
+
+USAGE: 
+    elvis   [SUBCOMMANND]
+
+SUBCOMMANDS:
+    dev     Calling Elvis!
+    docs    Serve the Elvis Book!
+    build   Build your satellite!
+    start   Launch your project to Mars!
+    help    Prints this Message!
+```
+
+### Starting Rustly
+
+checkout [clearloop/elvis][1].
+
+## Documentation
+
+Visit [https://clearloop.github.io/elvis][2] to view the documentation.
+
+
+## Contributing
+
+Come As You Are.
 
 ## LICENSE
 
 Heartbreak Hotel.
 
-[1]: https://clearloop.github.io/elvis
-[2]: https://docs.rs/elvis
+[1]: https://github.com/clearloop/elvis
+[2]: https://clearloop.github.io/elvis

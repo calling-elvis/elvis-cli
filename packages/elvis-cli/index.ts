@@ -8,11 +8,15 @@ import got from "got"
 import handler from "serve-handler";
 import http from "http";
 import path from "path";
+import Progress from "progress";
+import stream from "stream";
 import tar from "tar";
+import { promisify } from 'util';
 import webpack from "webpack";
 import webpackDevServer from "webpack-dev-server";
+
 const HtmlPlugin = require("html-webpack-plugin");
-const promisePipe = require("promisepipe");
+const pipeline = promisify(stream.pipeline);
 
 enum Logger {
   Done,
@@ -34,7 +38,7 @@ function log(text: string, ty?: Logger): void {
     case Logger.Done:
       status = chalk.greenBright("done");
       break;
-    case Logger.Done:
+    case Logger.Error:
       status = chalk.red("error");
       break;
     case Logger.Wait:
@@ -213,7 +217,7 @@ class ElvisPlugin {
       this.updateSPARouter(calling, home, pagesDir);
 
       // check if is devServer
-      if (compiler.options.devServer === undefined) {
+      if (compiler.options.mode === "production") {
         return;
       }
 
@@ -312,6 +316,11 @@ class Program {
     }
 
     const config: any = {
+      devServer: {
+        hot: true,
+        port: 1439,
+        noInfo: true,
+      },
       devtool: "inline-source-map",
       entry: bootstrap,
       mode: mode,
@@ -331,17 +340,12 @@ class Program {
 
     // webpack
     const compiler = webpack(config);
-    const devServerOptions = {
-      hot: true,
-      port: 1439,
-      noInfo: true,
-    };
 
     // check mode
     if (code === 0) {
       log("starting development server ...", Logger.Wait);
-      const server = new webpackDevServer(compiler, devServerOptions);
-      server.listen(devServerOptions.port, "127.0.0.1", (err) => {
+      const server = new webpackDevServer(compiler, config.devServer);
+      server.listen(config.devServer.port, "127.0.0.1", (err) => {
         if (err != null) {
           log(`start server failed.`, Logger.Error);
           process.exit(1);
@@ -381,7 +385,7 @@ class Program {
   static async docs(): Promise<void> {
     const home = process.env[(process.platform == 'win32') ? 'USERPROFILE' : 'HOME'];
     const docsDir = path.resolve(home, ".elvis/docs");
-    if (fs.existsSync(docsDir)) {
+    if (fs.existsSync(path.resolve(docsDir, "index.html"))) {
       try {
         execSync(`open ${path.resolve(docsDir, "index.html")}`);
         process.exit(0);
@@ -393,15 +397,34 @@ class Program {
 
     if (!fs.existsSync(path.resolve(home, ".elvis"))) {
       fs.mkdirSync(path.resolve(home, ".elvis"));
+    } else if (fs.existsSync(docsDir)) {
+      fs.rmdirSync(docsDir);
     }
 
-    log("downloading the elvis book ...", Logger.Wait);
-    await promisePipe(
-      got.stream("https://github.com/calling-elvis/the-elvis-book/releases/download/v0.1.0/docs.tar.gz"),
-      tar.extract({ cwd: path.resolve(home, ".elvis"), strip: 3 }, ["docs"])
-    );
+    fs.mkdirSync(docsDir);
+    let bar = new Progress(`[ ${chalk.cyan("wait")} ] [:bar] :rate/bps :etas`, {
+      complete: '=',
+      incomplete: ' ',
+      width: 42,
+      total: 1,
+    });
+    let prePercent = 0;
+    await pipeline(
+      got.stream("https://elvis-1253442844.cos.ap-hongkong.myqcloud.com/docs.tar.gz")
+        .on('request', (_) => {
+          log("downloading the elvis book ...", Logger.Wait);
+        })
+        .on("downloadProgress", (progress) => {
+          bar.tick(progress.percent - prePercent);
+          prePercent = progress.percent;
+        }),
+      tar.x({ cwd: docsDir, strip: 1 }),
+    ).catch((e) => {
+      log(`download failed: ${e.toString()}`, Logger.Error);
+      process.exit(1);
+    });
 
-    execSync(`open ${path.resolve(docsDir, "index.html")}`);
+    execSync(`open ${path.resolve(docsDir, "index.html")}`)
   }
 
   static run(): void {
@@ -439,7 +462,7 @@ class Program {
       "    elvis   [SUBCOMMANND]\n\n",
       "SUBCOMMANDS: \n",
       "    dev     Calling Elvis!\n",
-      "    docs    Serve the Elvis Book!\n",
+      "    docs    Open The Elvis Book!\n",
       "    build   Build your satellite!\n",
       "    start   Launch your project to Mars!\n",
       "    help    Prints this Message!"

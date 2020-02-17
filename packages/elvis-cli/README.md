@@ -22,7 +22,8 @@ $ yarn create elvis-app
    │   Inside that directory, you can run several commands:      │
    │                                                             │
    │     - yarn dev:    Starts the development server.           │
-   │     - yarn build:  Builds my-awesome-app for production.    │
+   │     - yarn docs:   Open The Elvis Book.                     |
+   │     - yarn build:  Builds my-awesome-app for production.    |
    │     - yarn start:  Runs my-awesome-app production mode.     │
    │                                                             │
    │   We suggest that you begin by typing:                      │
@@ -46,7 +47,7 @@ USAGE:
 
 SUBCOMMANDS:
     dev     Calling Elvis!
-    docs    Serve the Elvis Book!
+    docs    Open The Elvis Book!
     build   Build your satellite!
     start   Launch your project to Mars!
     help    Prints this Message!

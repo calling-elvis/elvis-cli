@@ -1,27 +1,28 @@
-import { Elvis as ElvisPrototype, Widget } from "elvis-web";
+import { Elvis as ElvisPrototype, State as ElvisState, Widget } from "../../../../elvis/web/pkg";
 import Router from "./router";
+import State from "./state";
 
 interface IElvis {
-  home: Widget;
+  home: State;
   router?: Router;
 }
 
 class Elvis {
-  public static call(widget: Widget) {
-    new ElvisPrototype(widget).calling();
+  public static call(widget: State | Widget) {
+    new ElvisPrototype(State.trans(widget)).calling();
   }
 
   public router: Router;
-  private home: Widget;
+  private home: State;
   private proto: ElvisPrototype;
 
   constructor(props: IElvis) {
     // init global route
     (window as any).route = () => {
       const ptr: string = window.location.pathname.slice(1);
-      const widget = this.router.routes[ptr];
-      if (widget instanceof Widget) {
-        this.proto = new ElvisPrototype(widget);
+      const widget: any = this.router.routes[ptr];
+      if (widget instanceof State) {
+        this.proto = new ElvisPrototype(State.trans(widget));
         this.calling();
       }
     };
@@ -30,7 +31,7 @@ class Elvis {
     this.router = props.router;
     this.home = props.home;
     if (window.location.pathname === "/") {
-      this.proto = new ElvisPrototype(this.home);
+      this.proto = new ElvisPrototype(State.trans(this.home));
     } else {
       (window as any).route();
     }

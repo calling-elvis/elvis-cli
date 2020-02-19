@@ -2,6 +2,7 @@
   "name": "elvisjs-project",
   "private": true,
   "scripts": {
+    "mode": "sh mode.sh",
     "create-app": "ts-node packages/create-elvis-app/index",
     "elvis": "ts-node packages/elvis-cli/index"
   },

@@ -277,13 +277,13 @@ class ElvisPlugin {
         return `import ${widget.slice(0, widget.lastIndexOf("."))} from "${relative}";`;
       }).join("\n"),
       "\nnew Elvis({",
-      `  home: ${home},`,
+      `  home: new ${home}(),`,
       "  router: new Router({",
       ElvisPlugin.getPages(pages).map((page) => {
         if (page.indexOf(home.toLowerCase()) < 0) {
           page = page.slice(0, page.lastIndexOf("."));
           let widget = page[0].toUpperCase() + page.slice(1);
-          return `    "${page}": ${widget},`;
+          return `    "${page}": new ${widget}(),`;
         }
       }).join("\n"),
       "  }),",

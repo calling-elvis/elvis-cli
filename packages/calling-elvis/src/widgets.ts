@@ -5,14 +5,18 @@ import {
   Text as ElvisText,
   TextStyle,
   Widget,
-} from "elvis-web";
+} from "../../../../elvis/web/pkg";
 
 export function Image(cfg: IImage): Widget {
   return ElvisImage(cfg.src, cfg.child);
 }
 
 // Text Wrapper
-export function Text(text: string, style: ITextStyle): Widget {
+export function Text(text: string, style?: ITextStyle): Widget {
+  if (style === undefined) {
+    style = {};
+  }
+
   return ElvisText(text, new TextStyle(
     style.bold,
     style.color,

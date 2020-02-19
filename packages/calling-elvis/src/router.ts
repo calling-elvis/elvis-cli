@@ -1,13 +1,8 @@
-import { Widget } from "elvis-web";
+import { Widget } from "../../../../elvis/web/pkg";
+import State from "./state";
 
 interface IRoutes {
-  [name: string]: Widget;
-}
-
-// type Routes = Map<string, Widget>;
-interface IPush {
-  props?: object;
-  title?: string;
+  [name: string]: State | Widget;
 }
 
 class Router {
@@ -27,6 +22,11 @@ class Router {
   public routes: IRoutes;
 
   constructor(routes?: IRoutes) {
+    for (const p in routes) {
+      if (routes[p] instanceof Widget) {
+        routes[p] = State.trans(routes[p]);
+      }
+    }
     this.routes = routes;
   }
 }

@@ -21,7 +21,7 @@ import {
   SizedBox as ElvisSizedBox,
   SizedBoxStyle,
   Widget,
-} from "elvis-web";
+} from "../../../../elvis/web/pkg";
 
 export function Align(widget: Widget, style: IAlignStyle): Widget {
   return ElvisAlign(widget, new AlignStyle(style.align));

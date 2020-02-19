@@ -14,6 +14,7 @@ import tar from "tar";
 import { promisify } from 'util';
 import webpack from "webpack";
 import webpackDevServer from "webpack-dev-server";
+import WasmPackPlugin from "@wasm-tool/wasm-pack-plugin";
 
 const HtmlPlugin = require("html-webpack-plugin");
 const pipeline = promisify(stream.pipeline);
@@ -253,6 +254,8 @@ class ElvisPlugin {
         });
     } else {
       // TODO: patch entry into ssr mode
+      log("not support ssr for now", Logger.Error);
+      process.exit(1);
     }
   }
 
@@ -295,11 +298,16 @@ class ElvisPlugin {
   }
 }
 
+enum Mode {
+  Dev,
+  Ori,
+  Pro,
+}
 
 /* simple cli program */
 class Program {
   /* webpack configs */
-  static pack(code: number): void {
+  static pack(mode: Mode): void {
     const etc = path.resolve(__dirname, ".etc");
     const bootstrap = path.resolve(etc, "bootstrap.js");
     if (!fs.existsSync(bootstrap)) {
@@ -310,12 +318,12 @@ class Program {
       fs.writeFileSync(bootstrap, `import("./calling");`);
     }
 
-    let mode = "development";
-    if (code !== 0) {
-      mode = "production";
+    let webpackMode = "development";
+    if (mode === Mode.Pro) {
+      webpackMode = "production";
     }
 
-    const config: any = {
+    let config: any = {
       devServer: {
         hot: true,
         port: 1439,
@@ -323,10 +331,15 @@ class Program {
       },
       devtool: "inline-source-map",
       entry: bootstrap,
-      mode: mode,
+      mode: webpackMode,
       output: {
         filename: "elvis.bundle.js",
         path: path.resolve(process.cwd(), ".elvis"),
+      },
+      module: {
+        rules: [
+          { test: /\.tsx?$/, loader: "ts-loader" }
+        ]
       },
       plugins: [
         new HtmlPlugin(),
@@ -338,11 +351,18 @@ class Program {
       watch: true,
     };
 
+    // original mode
+    if (mode === Mode.Ori) {
+      config.plugins.push(new WasmPackPlugin({
+        crateDirectory: path.resolve(__dirname, "../../../elvis/web"),
+      }));
+    }
+
     // webpack
     const compiler = webpack(config);
 
     // check mode
-    if (code === 0) {
+    if (mode !== Mode.Pro) {
       log("starting development server ...", Logger.Wait);
       const server = new webpackDevServer(compiler, config.devServer);
       server.listen(config.devServer.port, "127.0.0.1", (err) => {
@@ -355,7 +375,7 @@ class Program {
     } else {
       let packageJson = getPackageJson();
       log(`building ${packageJson.name} ...`, Logger.Wait);
-      compiler.run((err, stats) => {
+      compiler.run((err) => {
         if (err != null) {
           log(`compile failed.`, Logger.Error);
           process.exit(1);
@@ -436,13 +456,16 @@ class Program {
 
     switch (argv[2].trim()) {
       case "dev":
-        Program.pack(0);
+        Program.pack(Mode.Dev);
         break;
       case "docs":
         Program.docs();
         break;
       case "build":
-        Program.pack(1);
+        Program.pack(Mode.Pro);
+        break;
+      case "ori":
+        Program.pack(Mode.Ori);
         break;
       case "start":
         Program.start()

@@ -1,9 +1,11 @@
-**/*node_modules
-**/*lib
-**/*elvis.js
-**/*var
-**/*etc
-**/*.elvis
 pages
 yarn.lock
 yarn-error.log
+**/*.elvis
+**/*.elvis.js
+**/*bak
+**/*etc
+**/*lib
+**/*var
+**/*template
+**/*node_modules

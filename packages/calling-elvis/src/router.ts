@@ -1,8 +1,7 @@
-import { Widget } from "../../../../elvis/web/pkg";
-import State from "./state";
+import { ICallableWidget } from "./share";
 
 interface IRoutes {
-  [name: string]: State | Widget;
+  [name: string]: ICallableWidget;
 }
 
 class Router {
@@ -22,11 +21,6 @@ class Router {
   public routes: IRoutes;
 
   constructor(routes?: IRoutes) {
-    for (const p in routes) {
-      if (routes[p] instanceof Widget) {
-        routes[p] = State.trans(routes[p]);
-      }
-    }
     this.routes = routes;
   }
 }

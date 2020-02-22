@@ -1,46 +1,52 @@
-import { Text } from "./widgets";
-import { State as ElvisState, Widget } from "../../../../elvis/web/pkg";
+import { Widget } from "../../../../elvis/web/pkg";
 
-class State {
-  static from(widget: Widget): State {
-    let sw = new State();
-    sw.render = () => widget;
-    return sw;
-  }
+enum Process {
+  Create,
+  Update,
+  Dispose,
+}
 
-  static into(s: State): ElvisState {
-    if (s.proto === undefined) {
-      let widget: Widget = s.render();
-      return new ElvisState(widget, s.create, s.update, s.dispose);
-    }
-
-    for (const k in s.state) {
-      s.proto.set_state(k, JSON.stringify(s.state.get(k)));
-    }
-
-    return s.proto;
-  }
-
-  static trans(w: Widget | State): ElvisState {
-    if (w instanceof Widget) {
-      return State.into(State.from(w));
-    }
-    return State.into(w);
-  }
-
-  state: Map<string, object>;
-  proto: ElvisState;
-
-  constructor() {
-    this.proto = new ElvisState(this.render(), this.create, this.update, this.dispose);
-  }
+class StatefulWidget {
+  public state: any;
+  protected widget: Widget;
+  protected id: string;
+  private modified: boolean;
+  constructor() { }
 
   protected setState(obj: object) {
-    Object.assign(this.state, obj);
+    // this.preState = JSON.stringify(this.state);
+    if (!this.modified) {
+      this.modified = true;
+    }
+    this.state = Object.assign(this.state, obj);
+  }
+
+  protected trigger(p: Process) {
+    switch (p) {
+      case Process.Create:
+        this.create();
+        if (this.modified) {
+          this.widget = this.render();
+          this.widget.patch();
+          this.trigger(Process.Update);
+        }
+        break;
+      case Process.Update:
+        this.update();
+        break;
+      default:
+        break;
+    }
   }
 
   public render(): Widget {
-    return Text("Calling Elvis!");
+    return new Widget();
+  }
+
+  public calling(): void {
+    this.widget = this.render();
+    this.widget.calling();
+    this.trigger(Process.Create);
   }
 
   public create(): void { }
@@ -48,4 +54,4 @@ class State {
   public dispose(): void { }
 }
 
-export default State;
+export default StatefulWidget;

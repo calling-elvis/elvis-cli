@@ -1,29 +1,34 @@
-import { Elvis as ElvisPrototype, State as ElvisState, Widget } from "../../../../elvis/web/pkg";
+import { Widget } from "../../../../elvis/web/pkg";
 import Router from "./router";
-import State from "./state";
+import StatefulWidget from "./state";
+import { ICallableWidget } from "./share";
 
 interface IElvis {
-  home: State;
+  home: StatefulWidget;
   router?: Router;
 }
 
 class Elvis {
-  public static call(widget: State | Widget) {
-    new ElvisPrototype(State.trans(widget)).calling();
+  public static call(widget: ICallableWidget) {
+    widget.calling();
   }
 
   public router: Router;
-  private home: State;
-  private proto: ElvisPrototype;
+  private home: StatefulWidget;
+  private init: boolean;
 
   constructor(props: IElvis) {
+    this.init = true;
+
     // init global route
     (window as any).route = () => {
       const ptr: string = window.location.pathname.slice(1);
       const widget: any = this.router.routes[ptr];
-      if (widget instanceof State) {
-        this.proto = new ElvisPrototype(State.trans(widget));
-        this.calling();
+      if (
+        widget instanceof StatefulWidget
+        || widget instanceof Widget
+      ) {
+        widget.calling();
       }
     };
 
@@ -31,14 +36,15 @@ class Elvis {
     this.router = props.router;
     this.home = props.home;
     if (window.location.pathname === "/") {
-      this.proto = new ElvisPrototype(State.trans(this.home));
+      (!this.init) && this.home.calling();
     } else {
+      this.init && (this.init = false);
       (window as any).route();
     }
   }
 
   public calling() {
-    this.proto.calling();
+    this.home.calling();
   }
 }
 

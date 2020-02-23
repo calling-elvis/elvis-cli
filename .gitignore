@@ -2,7 +2,7 @@ pages
 yarn.lock
 yarn-error.log
 .mode
-# **/*.dev.lock
+**/*.dev.lock
 **/*.elvis
 **/*.elvis.js
 **/*bak

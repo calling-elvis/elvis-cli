@@ -2,6 +2,7 @@
 import chalk from "chalk";
 import { execSync } from "child_process";
 import chokidar from "chokidar";
+import { CleanWebpackPlugin } from "clean-webpack-plugin";
 import crypto from "crypto";
 import fs from "fs";
 import got from "got"
@@ -210,7 +211,7 @@ class ElvisPlugin {
     }
 
     // spa-or-ssr adapter
-    const calling = path.resolve(__dirname, ".etc/calling.js");
+    const calling = path.resolve(this.root, ".etc/calling.js");
     const pagesDir = path.resolve(this.root, this.options.pages);
     const home = this.options.home[0].toUpperCase() + this.options.home.slice(1);
     if (!this.options.ssr) {
@@ -308,7 +309,12 @@ enum Mode {
 class Program {
   /* webpack configs */
   static pack(mode: Mode): void {
-    const etc = path.resolve(__dirname, ".etc");
+    let root = ElvisPlugin.locate(process.cwd());
+    if (root === "") {
+      root = process.cwd();
+    }
+
+    const etc = path.resolve(root, ".etc");
     const bootstrap = path.resolve(etc, "bootstrap.js");
     if (!fs.existsSync(bootstrap)) {
       if (!fs.existsSync(etc)) {
@@ -344,6 +350,7 @@ class Program {
       plugins: [
         new HtmlPlugin(),
         new ElvisPlugin(),
+        new CleanWebpackPlugin(),
       ],
       resolve: {
         extensions: [".ts", ".js", ".wasm"],

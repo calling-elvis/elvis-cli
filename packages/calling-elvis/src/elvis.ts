@@ -1,7 +1,6 @@
-import { Widget } from "../../../../elvis/web/pkg";
+import { IElvisWidget, Widget } from "elvis-web";
 import Router from "./router";
 import StatefulWidget from "./state";
-import { ICallableWidget } from "./share";
 
 interface IElvis {
   home: StatefulWidget;
@@ -9,7 +8,7 @@ interface IElvis {
 }
 
 class Elvis {
-  public static call(widget: ICallableWidget) {
+  public static call(widget: IElvisWidget) {
     widget.calling();
   }
 

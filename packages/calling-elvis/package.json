@@ -4,7 +4,7 @@
     "clearloop <udtrokia@gmail.com>"
   ],
   "description": "Calling Elvis, is anybody home?",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -19,6 +19,10 @@
     "lib/src/layouts.d.ts",
     "lib/src/router.js",
     "lib/src/router.d.ts",
+    "lib/src/share.js",
+    "lib/src/share.d.ts",
+    "lib/src/state.js",
+    "lib/src/state.d.ts",
     "lib/src/widgets.js",
     "lib/src/widgets.d.ts"
   ],
@@ -27,6 +31,6 @@
   "types": "lib/index.d.ts",
   "sideEffects": false,
   "dependencies": {
-    "elvis-web": "^0.1.1"
+    "elvis-web": "^0.1.2"
   }
 }

@@ -5,10 +5,11 @@ import {
   Text as ElvisText,
   TextStyle,
   Widget,
-} from "../../../../elvis/web/pkg";
+} from "elvis-web";
+import { widgetPipe } from "./share";
 
 export function Image(cfg: IImage): Widget {
-  return ElvisImage(cfg.src, cfg.child);
+  return ElvisImage(cfg.src, widgetPipe(cfg.child));
 }
 
 // Text Wrapper

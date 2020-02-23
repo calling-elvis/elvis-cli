@@ -7,7 +7,7 @@
     "clearloop <udtrokia@gmail.com>"
   ],
   "description": "Calling Elvis, is anybody home?",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -21,7 +21,7 @@
   "sideEffects": false,
   "dependencies": {
     "@wasm-tool/wasm-pack-plugin": "^1.1.0",
-    "calling-elvis": "^0.1.11",
+    "calling-elvis": "^0.1.12",
     "chalk": "^3.0.0",
     "chokidar": "^3.3.1",
     "got": "^10.5.6",

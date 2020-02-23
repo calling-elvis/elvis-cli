@@ -2,6 +2,7 @@ import {
   Align as ElvisAlign,
   AlignStyle,
   Col as ElvisCol,
+  Center as ElvisCenter,
   Container as ElvisContainer,
   ContainerStyle,
   Flex as ElvisFlex,
@@ -10,6 +11,7 @@ import {
   GridStyle,
   IAlignStyle,
   IContainerStyle,
+  IElvisWidget,
   IFlexStyle,
   IGridStyle,
   IMultiColumnStyle,
@@ -21,29 +23,34 @@ import {
   SizedBox as ElvisSizedBox,
   SizedBoxStyle,
   Widget,
-} from "../../../../elvis/web/pkg";
+} from "elvis-web";
+import { widgetPipe } from "./share";
 
-export function Align(widget: Widget, style: IAlignStyle): Widget {
-  return ElvisAlign(widget, new AlignStyle(style.align));
+export function Align(widget: IElvisWidget, style: IAlignStyle): Widget {
+  return ElvisAlign(widgetPipe(widget), new AlignStyle(style.align));
 }
 
-export function Col(widgets: Widget[]): Widget {
+export function Col(widgets: IElvisWidget[]): Widget {
   const col = new ElvisCol();
   for (const i in widgets) {
     if (widgets[i] !== undefined) {
-      col.push(widgets[i]);
+      col.push(widgetPipe(widgets[i]));
     }
   }
 
   return col.widget();
 }
 
-export function Container(widget: Widget, style?: IContainerStyle): Widget {
+export function Center(widget: IElvisWidget): Widget {
+  return ElvisCenter(widgetPipe(widget));
+}
+
+export function Container(widget: IElvisWidget, style?: IContainerStyle): Widget {
   if (style === undefined) {
     style = {};
   }
 
-  return ElvisContainer(widget, new ContainerStyle(
+  return ElvisContainer(widgetPipe(widget), new ContainerStyle(
     style.align,
     style.color,
     style.height,
@@ -53,12 +60,12 @@ export function Container(widget: Widget, style?: IContainerStyle): Widget {
   ));
 }
 
-export function Flex(widget: Widget, style?: IFlexStyle): Widget {
+export function Flex(widget: IElvisWidget, style?: IFlexStyle): Widget {
   if (style === undefined) {
     style = {};
   }
 
-  return ElvisFlex(widget, new FlexStyle(
+  return ElvisFlex(widgetPipe(widget), new FlexStyle(
     style.align,
     style.basis,
     style.direction,
@@ -68,7 +75,7 @@ export function Flex(widget: Widget, style?: IFlexStyle): Widget {
   ));
 }
 
-export function Grid(widgets: Widget[], style?: IGridStyle): Widget {
+export function Grid(widgets: IElvisWidget[], style?: IGridStyle): Widget {
   if (style === undefined) {
     style = {};
   }
@@ -85,25 +92,25 @@ export function Grid(widgets: Widget[], style?: IGridStyle): Widget {
 
   for (const i in widgets) {
     if (widgets[i] !== undefined) {
-      grid.push(widgets[i]);
+      grid.push(widgetPipe(widgets[i]));
     }
   }
 
   return grid.widget();
 }
 
-export function List(widgets: Widget[]): Widget {
+export function List(widgets: IElvisWidget[]): Widget {
   const list = new ElvisList();
   for (const i in widgets) {
     if (widgets[i] !== undefined) {
-      list.push(widgets[i]);
+      list.push(widgetPipe(widgets[i]));
     }
   }
 
   return list.widget();
 }
 
-export function MultiColumn(widgets: Widget[], style?: IMultiColumnStyle): Widget {
+export function MultiColumn(widgets: IElvisWidget[], style?: IMultiColumnStyle): Widget {
   if (style === undefined) {
     style = {};
   }
@@ -116,24 +123,24 @@ export function MultiColumn(widgets: Widget[], style?: IMultiColumnStyle): Widge
   ));
   for (const i in widgets) {
     if (widgets[i] !== undefined) {
-      mc.push(widgets[i]);
+      mc.push(widgetPipe(widgets[i]));
     }
   }
 
   return mc.widget();
 }
 
-export function Row(widgets: Widget[]): Widget {
+export function Row(widgets: IElvisWidget[]): Widget {
   const row = new ElvisRow();
   for (const i in widgets) {
     if (widgets[i] !== undefined) {
-      row.push(widgets[i]);
+      row.push(widgetPipe(widgets[i]));
     }
   }
 
   return row.widget();
 }
 
-export function SizedBox(widget: Widget, style: ISizedBoxStyle): Widget {
-  return ElvisSizedBox(widget, new SizedBoxStyle(style.height, style.width));
+export function SizedBox(widget: IElvisWidget, style: ISizedBoxStyle): Widget {
+  return ElvisSizedBox(widgetPipe(widget), new SizedBoxStyle(style.height, style.width));
 }

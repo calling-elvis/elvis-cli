@@ -1,7 +1,7 @@
-import { ICallableWidget } from "./share";
+import { IElvisWidget } from "elvis-web";
 
 interface IRoutes {
-  [name: string]: ICallableWidget;
+  [name: string]: IElvisWidget;
 }
 
 class Router {

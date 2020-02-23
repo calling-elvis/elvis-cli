@@ -1,4 +1,4 @@
-import { Widget } from "../../../../elvis/web/pkg";
+import { Widget } from "elvis-web";
 
 enum Process {
   Create,
@@ -17,8 +17,8 @@ class StatefulWidget {
       case Process.Create:
         this.create();
         this.widget = this.render();
-        let shouldUpdate: boolean = this.widget.patch();
-        if (shouldUpdate) {
+        this.widget.setIdx(this.id);
+        if (this.widget.patch()) {
           this.trigger(Process.Update);
         }
         break;
@@ -30,14 +30,28 @@ class StatefulWidget {
     }
   }
 
-  public render(): Widget {
-    return new Widget();
+  public share(): Widget {
+    this.widget = this.render();
+    if (this.id === undefined) {
+      this.id = "widget-" + Math.random().toString(16).slice(3, 9);
+    }
+
+    this.widget.setIdx(this.id);
+    this.widget.style();
+    this.trigger(Process.Create);
+    return this.widget;
   }
 
   public calling(): void {
     this.widget = this.render();
+    this.id = "page-" + Math.random().toString(16).slice(3, 9);
+    this.widget.setIdx(this.id);
     this.widget.calling();
     this.trigger(Process.Create);
+  }
+
+  public render(): Widget {
+    return new Widget();
   }
 
   public create(): void { }

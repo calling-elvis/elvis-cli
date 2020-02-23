@@ -10,24 +10,15 @@ class StatefulWidget {
   public state: any;
   protected widget: Widget;
   protected id: string;
-  private modified: boolean;
   constructor() { }
-
-  protected setState(obj: object) {
-    // this.preState = JSON.stringify(this.state);
-    if (!this.modified) {
-      this.modified = true;
-    }
-    this.state = Object.assign(this.state, obj);
-  }
 
   protected trigger(p: Process) {
     switch (p) {
       case Process.Create:
         this.create();
-        if (this.modified) {
-          this.widget = this.render();
-          this.widget.patch();
+        this.widget = this.render();
+        let shouldUpdate: boolean = this.widget.patch();
+        if (shouldUpdate) {
           this.trigger(Process.Update);
         }
         break;

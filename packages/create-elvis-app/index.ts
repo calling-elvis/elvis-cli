@@ -35,15 +35,19 @@ We suggest that you begin by typing:
 
 const home: (appName: string) => Promise<string> = async (appName: string) => `
 /* home page for ${appName} */
-import { Center, Elvis, Text } from "calling-elvis";
+import { Center, StatefulWidget, Text } from "calling-elvis";
 
-export default Center(
-  Text("Is anybody home?", {
-    bold: true,
-    italic: true,
-    size: 6,
-  })
-);
+export default class Index extends StatefulWidget {
+  render() {
+    return Center(
+      Text("Is anybody home?", {
+        bold: true,
+        italic: true,
+        size: 6,
+      })
+    );
+  }
+}
 `.slice(1);
 
 const packageJson: (appName: string) => Promise<string> = async (appName: string) => `

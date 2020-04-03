@@ -1,14 +1,36 @@
 {
-  "name": "elvisjs-project",
-  "private": true,
-  "scripts": {
-    "mode": "sh mode.sh",
-    "create-app": "ts-node packages/create-elvis-app/index",
-    "elvis": "cd template && ts-node ../packages/elvis-cli/index"
-  },
-  "workspaces": [
-    "packages/*"
+  "name": "calling-elvis",
+  "collaborators": [
+    "clearloop <udtrokia@gmail.com>"
   ],
-  "dependencies": {},
-  "devDependencies": {}
+  "description": "Calling Elvis, is anybody home?",
+  "version": "0.1.12",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/clearloop/elvis"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/index.d.ts",
+    "lib/src/elvis.js",
+    "lib/src/elvis.d.ts",
+    "lib/src/layouts.js",
+    "lib/src/layouts.d.ts",
+    "lib/src/router.js",
+    "lib/src/router.d.ts",
+    "lib/src/share.js",
+    "lib/src/share.d.ts",
+    "lib/src/state.js",
+    "lib/src/state.d.ts",
+    "lib/src/widgets.js",
+    "lib/src/widgets.d.ts"
+  ],
+  "main": "lib/index.js",
+  "homepage": "https://github.com/clearloop/elvis",
+  "types": "lib/index.d.ts",
+  "sideEffects": false,
+  "dependencies": {
+    "elvis-web": "^0.1.2"
+  }
 }

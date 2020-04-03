@@ -1,0 +1,15 @@
+{
+  "name": "template",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "elvis build",
+    "dev": "elvis dev",
+    "docs": "elvis docs",
+    "start": "elvis start"
+  },
+  "dependencies": {
+    "calling-elvis": "0.1.12",
+    "elvis-cli": "0.1.15"
+  }
+}
